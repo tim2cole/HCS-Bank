@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funny Money Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F0F3EC;
+    --paper-raised:#FFFFFF;
+    --ink:#182420;
+    --ink-soft:#4B5951;
+    --line:#D9DECF;
+    --bank:#1F6F54;
+    --bank-dark:#154D3A;
+    --bank-tint:#E4F0E9;
+    --gold:#C98F2A;
+    --gold-tint:#FBF0DA;
+    --red:#B14436;
+    --red-tint:#F8E7E3;
+    --navy:#1B2A41;
+    --navy-2:#26385291;
+    --radius-card:18px;
+    --radius-btn:10px;
+    --shadow: 0 1px 0 rgba(24,36,32,0.05);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  #root{display:flex;min-height:100vh;}
+  ::selection{background:var(--bank-tint);}
+
+  /* ---------- NAV ---------- */
+  .rail{
+    width:220px;flex-shrink:0;background:var(--navy);color:#EDEFE8;
+    display:flex;flex-direction:column;padding:20px 14px;gap:2px;
+  }
+  .rail .brand{
+    padding:6px 8px 22px 8px;
+  }
+  .rail .brand .mark{font-size:20px;line-height:1.15;font-weight:600;color:#fff;}
+  .rail .brand .sub{font-size:11.5px;color:#9FB0A8;margin-top:3px;}
+  .navbtn{
+    display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:9px;
+    color:#C9D3CB;background:transparent;border:none;text-align:left;font-size:14px;
+    font-family:'Inter',sans-serif;cursor:pointer;transition:background .12s ease,color .12s ease;
+  }
+  .navbtn svg{flex-shrink:0;opacity:.85;}
+  .navbtn:hover{background:#25384F;color:#fff;}
+  .navbtn.active{background:var(--bank);color:#fff;}
+  .navbtn.active svg{opacity:1;}
+  .rail .spacer{flex:1;}
+  .rail .foot{font-size:11px;color:#7C8C84;padding:10px 8px 2px;border-top:1px solid #2A3B52;margin-top:6px;}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1;min-width:0;padding:26px 34px 60px;max-width:1180px;}
+  .topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px;}
+  .topbar .titles h1{font-size:26px;margin:0 0 4px;font-weight:600;}
+  .topbar .titles p{margin:0;color:var(--ink-soft);font-size:14px;}
+  .stat-strip{display:flex;gap:22px;}
+  .stat{background:var(--paper-raised);border:1px solid var(--line);border-radius:12px;padding:10px 16px;min-width:120px;}
+  .stat .n{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;color:var(--bank-dark);}
+  .stat .l{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius-card);padding:22px;box-shadow:var(--shadow);}
+  .card + .card{margin-top:18px;}
+
+  button{font-family:'Inter',sans-serif;}
+  .btn{
+    border:1px solid var(--line);background:var(--paper-raised);color:var(--ink);
+    padding:9px 16px;border-radius:var(--radius-btn);font-size:14px;font-weight:600;cursor:pointer;
+    transition:transform .05s ease, border-color .12s ease;
+  }
+  .btn:hover{border-color:var(--bank);}
+  .btn:active{transform:scale(.98);}
+  .btn.primary{background:var(--bank);border-color:var(--bank);color:#fff;}
+  .btn.primary:hover{background:var(--bank-dark);}
+  .btn.danger{background:var(--red);border-color:var(--red);color:#fff;}
+  .btn.danger:hover{background:#8f3529;}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--ink-soft);}
+  .btn.ghost:hover{color:var(--ink);border-color:var(--line);}
+  .btn.block{width:100%;}
+  .btn.lg{padding:16px 20px;font-size:15px;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+  .grid-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:900px){.grid-actions{grid-template-columns:repeat(2,1fr);}}
+  .action-tile{
+    display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px 16px;
+    border:1px solid var(--line);border-radius:14px;background:var(--paper-raised);cursor:pointer;
+    text-align:left;transition:border-color .12s ease, background .12s ease;
+  }
+  .action-tile:hover{border-color:var(--bank);background:var(--bank-tint);}
+  .action-tile .ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bank-tint);color:var(--bank-dark);}
+  .action-tile .t{font-weight:600;font-size:14.5px;}
+  .action-tile .d{font-size:12px;color:var(--ink-soft);}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th{text-align:left;font-size:11.5px;color:var(--ink-soft);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line);}
+  td{padding:11px 10px;border-bottom:1px solid #EAEDE2;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  td.num, th.num{text-align:right;}
+  .amt-pos{color:var(--bank-dark);font-weight:600;}
+  .amt-neg{color:var(--red);font-weight:600;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+  .pill.reward{background:var(--bank-tint);color:var(--bank-dark);}
+  .pill.fine{background:var(--red-tint);color:var(--red);}
+  .pill.purchase{background:var(--gold-tint);color:var(--gold);}
+  .pill.reversal{background:#EFEFEF;color:#666;}
+  .pill.payment{background:var(--bank-tint);color:var(--bank-dark);}
+
+  input,select,textarea{
+    font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+    font-size:14px;background:#fff;color:var(--ink);width:100%;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--bank);outline-offset:1px;border-color:var(--bank);}
+  label.field{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
+  .field-row{margin-bottom:14px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  .searchbox{position:relative;}
+  .search-results{border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden;background:#fff;}
+  .search-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;border-bottom:1px solid #EEF1E7;}
+  .search-row:last-child{border-bottom:none;}
+  .search-row:hover{background:var(--bank-tint);}
+  .search-row .name{font-weight:600;font-size:14px;}
+  .search-row .sub{font-size:12px;color:var(--ink-soft);}
+  .search-row .bal{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
+  /* physical card */
+  .fm-card{
+    width:320px;aspect-ratio:1.586/1;border-radius:16px;background:linear-gradient(135deg,#1B2A41,#233A57);
+    color:#fff;padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between;
+    box-shadow:0 10px 24px rgba(20,30,45,0.28);position:relative;overflow:hidden;
+  }
+  .fm-card::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);}
+  .fm-card .bank-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;letter-spacing:.2px;}
+  .fm-card .chip{width:34px;height:26px;border-radius:5px;background:linear-gradient(135deg,#D9A441,#F3D890);}
+  .fm-card .qr{width:44px;height:44px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;}
+  .fm-card .qr img,.fm-card .qr svg{width:36px;height:36px;}
+  .fm-card .holder{font-size:15px;font-weight:600;}
+  .fm-card .acct{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#B9C4D6;margin-top:2px;letter-spacing:.5px;}
+  .fm-card.inactive{filter:grayscale(1);opacity:.55;}
+  .fm-card .row{display:flex;justify-content:space-between;align-items:flex-start;}
+
+  .balance-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .balance-hero .num{font-family:'Fraunces',serif;font-size:52px;font-weight:600;color:var(--bank-dark);line-height:1;transition:opacity .18s ease;}
+  .balance-hero .lbl{font-size:13px;color:var(--ink-soft);margin-top:6px;}
+  .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+  .status-dot.on{background:var(--bank);}
+  .status-dot.off{background:#B9B9B9;}
+
+  .quick-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+
+  .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media (max-width:760px){.preset-grid{grid-template-columns:repeat(2,1fr);}}
+  .preset{
+    border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;background:#fff;text-align:left;
+  }
+  .preset:hover{border-color:var(--bank);}
+  .preset.selected{border-color:var(--bank);background:var(--bank-tint);}
+  .preset .pt{font-weight:600;font-size:13.5px;}
+  .preset .pa{font-family:'IBM Plex Mono',monospace;margin-top:4px;font-size:14px;}
+  .preset.reward .pa{color:var(--bank-dark);}
+  .preset.fine .pa{color:var(--red);}
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;
+    box-shadow:0 8px 22px rgba(0,0,0,.22);z-index:50;display:flex;align-items:center;gap:10px;
+    animation:toastin .18s ease;
+  }
+  .toast.err{background:var(--red);}
+  @keyframes toastin{from{opacity:0;transform:translate(-50%,8px);}to{opacity:1;transform:translate(-50%,0);}}
+
+  .empty{padding:34px 10px;text-align:center;color:var(--ink-soft);}
+  .empty .big{font-size:32px;margin-bottom:8px;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(22,32,28,.45);display:flex;align-items:center;justify-content:center;z-index:60;}
+  .modal{background:#fff;border-radius:16px;padding:26px;width:380px;max-width:92vw;}
+  .modal h3{margin:0 0 6px;}
+  .modal p{color:var(--ink-soft);font-size:14px;margin:0 0 18px;}
+  .modal .actions{display:flex;justify-content:flex-end;gap:10px;}
+
+  .section-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .section-h h2{font-size:17px;margin:0;font-weight:600;}
+  .section-h .hint{font-size:12.5px;color:var(--ink-soft);}
+
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;}
+  .tab{padding:9px 14px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;}
+  .tab.active{color:var(--bank-dark);border-color:var(--bank);}
+
+  .kiosk-wrap{display:flex;align-items:center;justify-content:center;min-height:70vh;}
+  .kiosk{width:420px;max-width:92vw;background:#fff;border-radius:22px;padding:30px;box-shadow:0 16px 40px rgba(20,30,25,.15);text-align:center;}
+
+  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:9px 6px;border-bottom:1px solid #EEF1E7;}
+  .checkbox-row:last-child{border-bottom:none;}
+
+  .badge-inactive{font-size:11px;background:#EFEFEF;color:#777;padding:2px 8px;border-radius:99px;}
+  .badge-active{font-size:11px;background:var(--bank-tint);color:var(--bank-dark);padding:2px 8px;border-radius:99px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ============================= ICONS ============================= */
+const ICONS = {
+  home: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>`,
+  scan: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>`,
+  reward: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M8.2 12.5 7 21l5-2.5L17 21l-1.2-8.5"/></svg>`,
+  fine: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>`,
+  store: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9 5 4h14l1 5"/><path d="M4 9h16v10H4z"/><path d="M9 13a3 3 0 0 0 6 0"/></svg>`,
+  payment: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 20c.7-3.2 3-5 6.5-5s5.8 1.8 6.5 5"/><path d="M14.5 15.3c2.7.4 4.3 2 4.9 4.7"/></svg>`,
+  students: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1-4 3.5-6 7-6s6 2 7 6"/></svg>`,
+  history: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>`,
+  reports: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>`,
+  kiosk: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="12" rx="1.5"/><path d="M9 20h6M12 15v5"/></svg>`,
+  back: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M14 18 7 11l7-7"/></svg>`,
+};
+function qr(seed){
+  // deterministic pseudo-qr pattern purely decorative, generated from the card id
+  let h = 0; for(let i=0;i<seed.length;i++) h = (h*31 + seed.charCodeAt(i)) >>> 0;
+  let rnd = ()=>{ h = (h*1103515245+12345) >>> 0; return (h>>>16) % 2; };
+  let cells='';
+  for(let y=0;y<7;y++) for(let x=0;x<7;x++){
+    if((x<2&&y<2)||(x>4&&y<2)||(x<2&&y>4)) continue; // leave corners for finder marks
+    if(rnd()) cells += `<rect x="${x*5}" y="${y*5}" width="4.4" height="4.4"/>`;
+  }
+  const finder = (fx,fy)=>`<rect x="${fx}" y="${fy}" width="9" height="9" fill="none" stroke="#111" stroke-width="2"/><rect x="${fx+3}" y="${fy+3}" width="3" height="3"/>`;
+  return `<svg viewBox="0 0 35 35" xmlns="http://www.w3.org/2000/svg" fill="#111">${cells}${finder(0,0)}${finder(26,0)}${finder(0,26)}</svg>`;
+}
+
+/* ============================= FIREBASE ============================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyB6iz_MOrkUSWS3Sz6NKP-Ys8RkwAvVSgw",
+  authDomain: "hcs-bank.firebaseapp.com",
+  projectId: "hcs-bank",
+  storageBucket: "hcs-bank.firebasestorage.app",
+  messagingSenderId: "851840007523",
+  appId: "1:851840007523:web:3404fd1fc95db161c7a756",
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+// Everyone in the class shares this single document. Change 'classState' if you
+// ever want a second, independent bank (e.g. one per class period).
+const stateDocRef = doc(db, 'funnymoney', 'classState');
+
+/* ============================= STATE ============================= */
+let state = null;
+let view = {name:'dashboard'};
+let toastTimer = null;
+const urlParams = new URLSearchParams(location.search);
+const KIOSK_MODE = urlParams.get('kiosk') === '1'; // bookmark ?kiosk=1 on the classroom kiosk device
+let unlocked = false; // resets on page reload/close \u2014 in-memory only, no browser storage used
+
+function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,8).toUpperCase(); }
+function cardId(){ const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s='FMC-'; for(let i=0;i<8;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+function acctId(n){ return 'FM-' + String(1000+n); }
+
+function seedState(){
+  const students = [
+    {id:'st1', acct:'FM-1041', name:'Jordan M.', classPeriod:'Period 3', active:true, cardId:'FMC-K7P92X4Q', cardActive:true},
+    {id:'st2', acct:'FM-1042', name:'Ava R.', classPeriod:'Period 3', active:true, cardId:'FMC-J2M84LWT', cardActive:true},
+    {id:'st3', acct:'FM-1043', name:'Deshawn T.', classPeriod:'Period 3', active:true, cardId:'FMC-Q9X31CRP', cardActive:true},
+    {id:'st4', acct:'FM-1044', name:'Priya S.', classPeriod:'Period 3', active:true, cardId:'FMC-7VBN45KD', cardActive:true},
+    {id:'st5', acct:'FM-1045', name:'Miles O.', classPeriod:'Period 3', active:true, cardId:'FMC-2LPX98QY', cardActive:true},
+  ];
+  const now = Date.now();
+  const day = 86400000;
+  const transactions = [
+    {id:'TX-00001', studentId:'st1', type:'reward', amount:250, description:'Excellent participation', ts: now-3*day, by:'Ms. Alvarez'},
+    {id:'TX-00002', studentId:'st1', type:'purchase', amount:-10, description:'Pencil', ts: now-2*day, by:'Ms. Alvarez'},
+    {id:'TX-00003', studentId:'st1', type:'reward', amount:20, description:'Homework completed', ts: now-2*day, by:'Ms. Alvarez'},
+    {id:'TX-00004', studentId:'st1', type:'reward', amount:125, description:'Weekly bonus', ts: now-1*day, by:'Ms. Alvarez'},
+    {id:'TX-00005', studentId:'st2', type:'reward', amount:150, description:'On-task behavior', ts: now-2*day, by:'Ms. Alvarez'},
+    {id:'TX-00006', studentId:'st2', type:'fine', amount:-10, description:'Late assignment', ts: now-1*day, by:'Ms. Alvarez'},
+    {id:'TX-00007', studentId:'st3', type:'reward', amount:200, description:'Above-and-beyond effort', ts: now-4*day, by:'Ms. Alvarez'},
+    {id:'TX-00008', studentId:'st4', type:'reward', amount:100, description:'Prepared for class', ts: now-3*day, by:'Ms. Alvarez'},
+    {id:'TX-00009', studentId:'st5', type:'reward', amount:75, description:'Helping another student', ts: now-2*day, by:'Ms. Alvarez'},
+  ];
+  return {
+    classPeriod:'Period 3',
+    teacherName:'Ms. Alvarez',
+    students, transactions,
+    products:[
+      {id:'p1', name:'Pencil', price:10, inventory:40},
+      {id:'p2', name:'Homework pass', price:150, inventory:5},
+      {id:'p3', name:'Choose your seat', price:100, inventory:null},
+      {id:'p4', name:'Snack', price:75, inventory:18},
+      {id:'p5', name:'Music privilege', price:125, inventory:null},
+      {id:'p6', name:'Mystery prize', price:200, inventory:8},
+    ],
+    rewardPresets:[
+      {name:'On-task behavior', amount:5},
+      {name:'Prepared for class', amount:10},
+      {name:'Homework completed', amount:20},
+      {name:'Helping another student', amount:10},
+      {name:'Excellent participation', amount:15},
+      {name:'Above-and-beyond effort', amount:25},
+      {name:'Weekly bonus', amount:50},
+    ],
+    finePresets:[
+      {name:'Missing pencil', amount:5},
+      {name:'Late assignment', amount:10},
+      {name:'Classroom rule violation', amount:20},
+      {name:'Replacement material', amount:25},
+    ],
+    settings:{ allowNegativeFromFines:true, teacherPin:'1234' },
+    nextTx: 10,
+    nextAcct: 1046,
+  };
+}
+
+async function saveState(){
+  try{ await setDoc(stateDocRef, { json: JSON.stringify(state) }); }
+  catch(e){ console.error('save failed', e); toast('Could not save \u2014 check your internet connection.', true); }
+}
+function setView(v){ view = v; render(); }
+
+/* ============================= DERIVED ============================= */
+function txForStudent(id){ return state.transactions.filter(t=>t.studentId===id).sort((a,b)=>b.ts-a.ts); }
+function balanceOf(id){ return state.transactions.filter(t=>t.studentId===id).reduce((s,t)=>s+t.amount,0); }
+function studentById(id){ return state.students.find(s=>s.id===id); }
+function moneyIssuedToday(){
+  const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+  return state.transactions.filter(t=>t.ts>=startOfDay.getTime() && t.amount>0).reduce((s,t)=>s+t.amount,0);
+}
+function txCountToday(){
+  const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+  return state.transactions.filter(t=>t.ts>=startOfDay.getTime()).length;
+}
+function fmt$(n){ const neg = n<0; const v = Math.abs(n); return (neg?'-':'') + '$' + v.toLocaleString(); }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+function fmtDateTime(ts){ return new Date(ts).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+
+function addTransaction(studentId, type, amount, description, relatedId){
+  state.nextTx += 1;
+  const tx = {
+    id:'TX-'+String(state.nextTx).padStart(5,'0'),
+    studentId, type, amount, description,
+    ts: Date.now(), by: state.teacherName,
+    relatedTransactionId: relatedId || null,
+  };
+  state.transactions.push(tx);
+  return tx;
+}
+
+/* ============================= TOAST ============================= */
+function toast(msg, isErr){
+  clearTimeout(toastTimer);
+  const old = document.querySelector('.toast'); if(old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'toast' + (isErr?' err':'');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  toastTimer = setTimeout(()=>el.remove(), 2600);
+}
+
+/* ============================= RENDER SHELL ============================= */
+function render(){
+  if(KIOSK_MODE){ renderStandaloneKiosk(); return; }
+  if(!unlocked){ renderLockScreen(); return; }
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div class="rail">
+      <div class="brand">
+        <div class="mark">Funny Money Bank</div>
+        <div class="sub">${state.classPeriod}</div>
+      </div>
+      ${navBtn('dashboard','home','Dashboard')}
+      ${navBtn('select','scan','Scan / find student')}
+      ${navBtn('storeManage','store','Class store')}
+      ${navBtn('classPayment','payment','Pay whole class')}
+      ${navBtn('students','students','Manage students')}
+      ${navBtn('history','history','Transaction history')}
+      ${navBtn('reports','reports','Reports')}
+      ${navBtn('kiosk','kiosk','Student kiosk')}
+      <div class="spacer"></div>
+      <div class="foot">
+        Signed in as ${state.teacherName}<br>Closed-loop classroom currency &mdash; no real money.
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <button class="btn ghost" style="flex:1;color:#C9D3CB;padding:7px 8px;font-size:12px;" onclick="openPinModal()">Change PIN</button>
+          <button class="btn ghost" style="flex:1;color:#C9D3CB;padding:7px 8px;font-size:12px;" onclick="lockApp()">Lock</button>
+        </div>
+      </div>
+    </div>
+    <div class="main" id="main"></div>
+  `;
+  document.getElementById('main').innerHTML = renderView();
+  bindGlobalHandlers();
+}
+function renderLockScreen(){
+  document.getElementById('root').innerHTML = `
+    <div class="kiosk-wrap"><div class="kiosk">
+      <h2 style="margin-top:0;">Funny Money Bank</h2>
+      <p style="color:var(--ink-soft);font-size:14px;">Enter the teacher PIN to open the dashboard.</p>
+      <input id="pinInput" type="password" inputmode="numeric" autocomplete="off"
+        style="text-align:center;font-size:22px;letter-spacing:6px;margin-top:6px;"
+        placeholder="&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter') tryUnlock()">
+      <button class="btn primary block lg" style="margin-top:14px;" onclick="tryUnlock()">Unlock</button>
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
+        <a href="?kiosk=1" style="font-size:13px;color:var(--ink-soft);">Students: open the balance kiosk instead &rarr;</a>
+      </div>
+    </div></div>
+  `;
+  document.getElementById('pinInput').focus();
+}
+function tryUnlock(){
+  const val = document.getElementById('pinInput').value;
+  const correct = (state.settings && state.settings.teacherPin) || '1234';
+  if(val === correct){ unlocked = true; render(); }
+  else{
+    toast('Incorrect PIN.', true);
+    const inp = document.getElementById('pinInput'); inp.value=''; inp.focus();
+  }
+}
+function lockApp(){ unlocked = false; render(); }
+function openPinModal(){
+  showModal(`
+    <h3>Change teacher PIN</h3>
+    <p>This PIN is shared by anyone who manages the bank and is stored with your class data.</p>
+    <div class="field-row"><label class="field">Current PIN</label><input id="pinCurrent" type="password" inputmode="numeric"></div>
+    <div class="field-row"><label class="field">New PIN</label><input id="pinNew" type="password" inputmode="numeric"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="savePin()">Save</button>
+    </div>
+  `);
+}
+function savePin(){
+  const current = document.getElementById('pinCurrent').value;
+  const next = document.getElementById('pinNew').value.trim();
+  const correct = (state.settings && state.settings.teacherPin) || '1234';
+  if(current !== correct){ toast('Current PIN is incorrect.', true); return; }
+  if(!next || next.length < 4){ toast('New PIN should be at least 4 digits.', true); return; }
+  state.settings.teacherPin = next;
+  saveState(); closeModal(); toast('PIN updated.');
+}
+function renderStandaloneKiosk(){
+  document.getElementById('root').innerHTML = `<div class="main" style="max-width:none;width:100%;padding:0;">${viewKiosk()}</div>`;
+}
+function navBtn(name, icon, label){
+  const active = view.name===name || (name==='select' && view.name==='student');
+  return `<button class="navbtn ${active?'active':''}" onclick="setView({name:'${name}'})">${ICONS[icon]}<span>${label}</span></button>`;
+}
+
+function renderView(){
+  switch(view.name){
+    case 'dashboard': return viewDashboard();
+    case 'select': return viewSelect();
+    case 'student': return viewStudent(view.studentId);
+    case 'reward': return viewRewardOrFine('reward');
+    case 'fine': return viewRewardOrFine('fine');
+    case 'store': return viewStorePurchase(view.studentId);
+    case 'storeManage': return viewStoreManage();
+    case 'classPayment': return viewClassPayment();
+    case 'students': return viewStudents();
+    case 'history': return viewHistory();
+    case 'reports': return viewReports();
+    case 'kiosk': return viewKiosk();
+    default: return viewDashboard();
+  }
+}
+
+/* ============================= DASHBOARD ============================= */
+function viewDashboard(){
+  const total = state.students.reduce((s,st)=>s+balanceOf(st.id),0);
+  return `
+    <div class="topbar">
+      <div class="titles">
+        <h1>Good to see you, ${state.teacherName.split(' ')[0]}</h1>
+        <p>${state.classPeriod} &middot; ${state.students.filter(s=>s.active).length} students</p>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="n mono">${fmt$(total)}</div><div class="l">In circulation</div></div>
+        <div class="stat"><div class="n mono">${txCountToday()}</div><div class="l">Transactions today</div></div>
+        <div class="stat"><div class="n mono">${fmt$(moneyIssuedToday())}</div><div class="l">Issued today</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+      <div>
+        <h2 style="margin:0 0 6px;font-size:19px;">Scan a student's card</h2>
+        <p style="margin:0;color:var(--ink-soft);font-size:14px;max-width:40ch;">Pull up an account to give a reward, issue a fine, or ring up a store purchase.</p>
+      </div>
+      <button class="btn primary lg" onclick="setView({name:'select'})">${ICONS.scan} &nbsp;Scan card</button>
+    </div>
+
+    <div class="section-h" style="margin-top:22px;"><h2>Quick actions</h2></div>
+    <div class="grid-actions">
+      ${actionTile('select','reward','Give a reward','Boost a student balance')}
+      ${actionTile('select-fine','fine','Issue a fine','Deduct for a rule or fee')}
+      ${actionTile('storeManage','store','Class store','Manage items & prices')}
+      ${actionTile('classPayment','payment','Pay whole class','One reward, everyone at once')}
+      ${actionTile('students','students','Manage students','Add students, issue cards')}
+      ${actionTile('history','history','Transaction history','Every credit and debit')}
+      ${actionTile('reports','reports','Reports','Balances, sales, money supply')}
+      ${actionTile('kiosk','kiosk','Student kiosk','Self-serve balance check')}
+    </div>
+
+    <div class="section-h" style="margin-top:24px;"><h2>Recent activity</h2><span class="hint">Last 8 transactions</span></div>
+    <div class="card" style="padding:8px 22px;">
+      ${recentTable()}
+    </div>
+  `;
+}
+function actionTile(target,icon,title,desc){
+  const goto = target==='select-fine' ? `setView({name:'select', intent:'fine'})` : `setView({name:'${target}'})`;
+  return `<div class="action-tile" onclick="${goto}">
+    <div class="ic">${ICONS[icon]}</div>
+    <div class="t">${title}</div>
+    <div class="d">${desc}</div>
+  </div>`;
+}
+function recentTable(){
+  const rows = [...state.transactions].sort((a,b)=>b.ts-a.ts).slice(0,8);
+  if(!rows.length) return `<div class="empty">No transactions yet today.</div>`;
+  return `<table><thead><tr><th>Student</th><th>Type</th><th>Description</th><th>When</th><th class="num">Amount</th></tr></thead><tbody>
+    ${rows.map(t=>{
+      const st = studentById(t.studentId);
+      return `<tr>
+        <td>${st?st.name:'&mdash;'}</td>
+        <td><span class="pill ${t.type}">${labelType(t.type)}</span></td>
+        <td>${t.description}</td>
+        <td style="color:var(--ink-soft);">${fmtDateTime(t.ts)}</td>
+        <td class="num mono ${t.amount>=0?'amt-pos':'amt-neg'}">${fmt$(t.amount)}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+function labelType(t){
+  return {reward:'Reward',fine:'Fine',purchase:'Purchase',reversal:'Reversal',payment:'Class payment',adjustment:'Adjustment'}[t] || t;
+}
+
+/* ============================= SELECT / SCAN ============================= */
+function viewSelect(){
+  const intent = view.intent || null;
+  return `
+    <div class="topbar"><div class="titles"><h1>Find a student</h1><p>Search by name, or simulate a card scan below.</p></div></div>
+    <div class="card">
+      <label class="field">Search by name</label>
+      <div class="searchbox">
+        <input id="studentSearch" placeholder="Start typing a name&hellip;" oninput="onSearchInput(this.value)" autofocus>
+        <div id="searchResults" class="search-results" style="display:none;"></div>
+      </div>
+      <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line);">
+        <div class="hint" style="color:var(--ink-soft);font-size:13px;margin-bottom:10px;">Or pick a student to simulate scanning their card:</div>
+        <div class="search-results" style="display:block;">
+          ${state.students.filter(s=>s.active).map(s=>studentRow(s)).join('') || '<div class="empty">No active students yet.</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function studentRow(s){
+  const bal = balanceOf(s.id);
+  return `<div class="search-row" onclick="selectStudent('${s.id}')">
+    <div><div class="name">${s.name}</div><div class="sub">${s.acct} &middot; ${s.classPeriod}</div></div>
+    <div class="bal">${fmt$(bal)}</div>
+  </div>`;
+}
+function onSearchInput(v){
+  const box = document.getElementById('searchResults');
+  if(!v.trim()){ box.style.display='none'; box.innerHTML=''; return; }
+  const matches = state.students.filter(s=>s.active && s.name.toLowerCase().includes(v.toLowerCase()));
+  box.style.display='block';
+  box.innerHTML = matches.length ? matches.map(studentRow).join('') : `<div class="empty" style="padding:16px;">No matches.</div>`;
+}
+function selectStudent(id){ setView({name:'student', studentId:id}); }
+
+/* ============================= STUDENT DETAIL ============================= */
+function viewStudent(id){
+  const s = studentById(id);
+  if(!s) return viewSelect();
+  const bal = balanceOf(id);
+  const hist = txForStudent(id).slice(0,10);
+  return `
+    <div class="topbar">
+      <div class="titles">
+        <button class="btn ghost" onclick="setView({name:'select'})" style="margin-bottom:8px;padding-left:4px;">${ICONS.back} Back to search</button>
+        <h1>${s.name}</h1>
+        <p>${s.acct} &middot; ${s.classPeriod} &middot; <span class="${s.active?'badge-active':'badge-inactive'}">${s.active?'Active':'Inactive'}</span></p>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;gap:26px;flex-wrap:wrap;justify-content:space-between;">
+      <div class="balance-hero">
+        <div>
+          <div class="num mono">${fmt$(bal)}</div>
+          <div class="lbl">Available Funny Money</div>
+        </div>
+      </div>
+      ${cardFace(s)}
+    </div>
+
+    <div class="quick-row">
+      <button class="btn primary" onclick="setView({name:'reward', studentId:'${s.id}'})">${ICONS.reward} Give reward</button>
+      <button class="btn danger" onclick="setView({name:'fine', studentId:'${s.id}'})">${ICONS.fine} Issue fine</button>
+      <button class="btn" onclick="setView({name:'store', studentId:'${s.id}'})">${ICONS.store} Purchase</button>
+      <button class="btn ghost" onclick="setView({name:'students', focus:'${s.id}'})">Edit account &middot; card</button>
+    </div>
+
+    <div class="section-h" style="margin-top:22px;"><h2>Recent transactions</h2><span class="hint">Showing last 10</span></div>
+    <div class="card" style="padding:8px 22px;">
+      ${hist.length ? `<table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="num">Amount</th><th class="num">Balance after</th></tr></thead><tbody>
+        ${hist.map(t=>rowWithRunningBalance(t,id)).join('')}
+      </tbody></table>` : `<div class="empty">No activity yet.</div>`}
+    </div>
+  `;
+}
+function rowWithRunningBalance(t, studentId){
+  // running balance = sum of all tx for student up to and including this one
+  const all = txForStudent(studentId).slice().sort((a,b)=>a.ts-b.ts);
+  let running=0, after=0;
+  for(const x of all){ running += x.amount; if(x.id===t.id){ after = running; } }
+  return `<tr>
+    <td style="color:var(--ink-soft);">${fmtDate(t.ts)}</td>
+    <td><span class="pill ${t.type}">${labelType(t.type)}</span></td>
+    <td>${t.description}</td>
+    <td class="num mono ${t.amount>=0?'amt-pos':'amt-neg'}">${fmt$(t.amount)}</td>
+    <td class="num mono">${fmt$(after)}</td>
+  </tr>`;
+}
+function cardFace(s){
+  return `<div class="fm-card ${s.active && s.cardActive ? '' : 'inactive'}">
+    <div class="row">
+      <div class="bank-name">Funny Money Bank</div>
+      <div class="chip"></div>
+    </div>
+    <div class="row" style="align-items:flex-end;">
+      <div>
+        <div class="holder">${s.name}</div>
+        <div class="acct">${s.acct} &nbsp;&middot;&nbsp; ${s.cardActive ? s.cardId : 'Card deactivated'}</div>
+      </div>
+      <div class="qr">${qr(s.cardId)}</div>
+    </div>
+  </div>`;
+}
+
+/* ============================= REWARD / FINE ============================= */
+function viewRewardOrFine(kind){
+  const isReward = kind==='reward';
+  const s = view.studentId ? studentById(view.studentId) : null;
+  const presets = isReward ? state.rewardPresets : state.finePresets;
+  return `
+    <div class="topbar"><div class="titles">
+      <button class="btn ghost" onclick="setView({name:'${s?'student':'select'}'${s?`, studentId:'${s.id}'`:''}})" style="margin-bottom:8px;padding-left:4px;">${ICONS.back} Back</button>
+      <h1>${isReward?'Give a reward':'Issue a fine'}</h1>
+      <p>${s ? `For ${s.name} &middot; ${s.acct}` : 'Choose a student, then a preset amount.'}</p>
+    </div></div>
+
+    <div class="card">
+      ${!s ? `<div class="field-row"><label class="field">Student</label>
+        <div class="searchbox"><input id="raStudentSearch" placeholder="Search by name&hellip;" oninput="onRaSearch(this.value,'${kind}')">
+        <div id="raResults" class="search-results" style="display:none;"></div></div></div>`
+        : `<div class="field-row" style="display:flex;align-items:center;gap:12px;">
+            <div class="stat" style="min-width:0;"><div class="l">Selected student</div><div class="n" style="font-size:15px;">${s.name}</div></div>
+            <div class="stat"><div class="l">Current balance</div><div class="n mono">${fmt$(balanceOf(s.id))}</div></div>
+          </div>`}
+
+      <div class="field-row">
+        <label class="field">${isReward?'Reward':'Fine / fee'} preset</label>
+        <div class="preset-grid" id="presetGrid">
+          ${presets.map((p,i)=>`<div class="preset ${kind}" data-idx="${i}" onclick="pickPreset(${i},'${kind}')">
+            <div class="pt">${p.name}</div><div class="pa mono">${isReward?'+':'-'}$${p.amount}</div>
+          </div>`).join('')}
+          <div class="preset ${kind}" data-idx="custom" onclick="pickPreset('custom','${kind}')">
+            <div class="pt">Custom ${isReward?'reward':'fine'}</div><div class="pa mono">&hellip;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col field-row">
+        <div>
+          <label class="field">Description</label>
+          <input id="raDesc" placeholder="e.g. ${isReward?'Great teamwork today':'Talking during quiet work'}">
+        </div>
+        <div>
+          <label class="field">Amount ($)</label>
+          <input id="raAmount" type="number" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+
+      <button class="btn ${isReward?'primary':'danger'} lg block" id="raSubmit" onclick="submitRewardFine('${kind}')" ${s?'':'disabled'}>
+        ${isReward?'Give reward':'Issue fine'}
+      </button>
+    </div>
+  `;
+}
+let raSelectedStudent = null;
+function onRaSearch(v, kind){
+  const box = document.getElementById('raResults');
+  if(!v.trim()){ box.style.display='none'; return; }
+  const matches = state.students.filter(s=>s.active && s.name.toLowerCase().includes(v.toLowerCase()));
+  box.style.display='block';
+  box.innerHTML = matches.length ? matches.map(s=>`<div class="search-row" onclick="pickRaStudent('${s.id}','${kind}')">
+      <div><div class="name">${s.name}</div><div class="sub">${s.acct}</div></div><div class="bal">${fmt$(balanceOf(s.id))}</div>
+    </div>`).join('') : `<div class="empty" style="padding:14px;">No matches.</div>`;
+}
+function pickRaStudent(id, kind){ setView({name:kind, studentId:id}); }
+function pickPreset(idx, kind){
+  document.querySelectorAll('#presetGrid .preset').forEach(el=>el.classList.remove('selected'));
+  const el = document.querySelector(`#presetGrid .preset[data-idx="${idx}"]`);
+  if(el) el.classList.add('selected');
+  const presets = kind==='reward' ? state.rewardPresets : state.finePresets;
+  if(idx==='custom'){
+    document.getElementById('raDesc').value='';
+    document.getElementById('raAmount').value='';
+    document.getElementById('raDesc').focus();
+  }else{
+    const p = presets[idx];
+    document.getElementById('raDesc').value = p.name;
+    document.getElementById('raAmount').value = p.amount;
+  }
+}
+function submitRewardFine(kind){
+  const s = studentById(view.studentId);
+  if(!s){ toast('Choose a student first.', true); return; }
+  const desc = document.getElementById('raDesc').value.trim();
+  const amt = parseFloat(document.getElementById('raAmount').value);
+  if(!desc){ toast('Add a short description.', true); return; }
+  if(!amt || amt<=0){ toast('Enter an amount greater than 0.', true); return; }
+  const signed = kind==='reward' ? Math.round(amt) : -Math.round(amt);
+  if(kind==='fine' && !state.settings.allowNegativeFromFines){
+    const projected = balanceOf(s.id) + signed;
+    if(projected < 0){ toast(`That would take ${s.name} below $0. Fines can't do that with the current setting.`, true); return; }
+  }
+  addTransaction(s.id, kind, signed, desc);
+  saveState();
+  toast(`${kind==='reward'?'Reward':'Fine'} recorded for ${s.name}: ${fmt$(signed)}`);
+  setView({name:'student', studentId:s.id});
+}
+
+/* ============================= STORE (purchase) ============================= */
+function viewStorePurchase(studentId){
+  const s = studentId ? studentById(studentId) : null;
+  const bal = s ? balanceOf(s.id) : 0;
+  return `
+    <div class="topbar"><div class="titles">
+      <button class="btn ghost" onclick="setView({name:'${s?'student':'select'}'${s?`, studentId:'${s.id}'`:''}})" style="margin-bottom:8px;padding-left:4px;">${ICONS.back} Back</button>
+      <h1>Class store</h1>
+      <p>${s ? `Shopping for ${s.name} &middot; balance ${fmt$(bal)}` : 'Select a student to start checkout.'}</p>
+    </div></div>
+    ${!s ? `<div class="card"><div class="empty">Scan or search for a student first, then come back to the store.<br><button class="btn primary" style="margin-top:12px;" onclick="setView({name:'select'})">Find a student</button></div></div>` : `
+    <div class="card">
+      <table><thead><tr><th>Item</th><th class="num">Price</th><th class="num">In stock</th><th></th></tr></thead><tbody>
+        ${state.products.map(p=>{
+          const outOfStock = p.inventory!==null && p.inventory<=0;
+          const cantAfford = bal < p.price;
+          const disabled = outOfStock || cantAfford;
+          return `<tr>
+            <td>${p.name}</td>
+            <td class="num mono">${fmt$(p.price)}</td>
+            <td class="num">${p.inventory===null?'&mdash;':p.inventory}</td>
+            <td class="num"><button class="btn ${disabled?'':'primary'}" ${disabled?'disabled':''} onclick="buyItem('${s.id}','${p.id}')">${outOfStock?'Sold out':cantAfford?'Insufficient funds':'Buy'}</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+    </div>`}
+  `;
+}
+function buyItem(studentId, productId){
+  const s = studentById(studentId), p = state.products.find(x=>x.id===productId);
+  if(!s || !p) return;
+  const bal = balanceOf(studentId);
+  if(p.inventory!==null && p.inventory<=0){ toast('That item is sold out.', true); return; }
+  if(bal < p.price){ toast(`Declined \u2014 insufficient Funny Money. ${s.name} has ${fmt$(bal)}, item costs ${fmt$(p.price)}.`, true); return; }
+  addTransaction(studentId, 'purchase', -p.price, p.name);
+  if(p.inventory!==null) p.inventory -= 1;
+  saveState();
+  toast(`Approved \u2014 ${s.name} bought ${p.name}. New balance: ${fmt$(balanceOf(studentId))}`);
+  render();
+}
+
+/* ============================= STORE MANAGE ============================= */
+function viewStoreManage(){
+  return `
+    <div class="topbar"><div class="titles"><h1>Class store</h1><p>Set prices and track inventory for classroom items.</p></div>
+      <button class="btn primary" onclick="openProductModal()">Add item</button>
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Item</th><th class="num">Price</th><th class="num">Inventory</th><th class="num">Sold</th><th></th></tr></thead><tbody>
+        ${state.products.map(p=>{
+          const sold = state.transactions.filter(t=>t.type==='purchase' && t.description===p.name).length;
+          return `<tr>
+            <td>${p.name}</td>
+            <td class="num mono">${fmt$(p.price)}</td>
+            <td class="num">${p.inventory===null?'Unlimited':p.inventory}</td>
+            <td class="num mono">${sold}</td>
+            <td class="num"><button class="btn ghost" onclick='openProductModal(${JSON.stringify(p.id)})'>Edit</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+    </div>
+  `;
+}
+function openProductModal(id){
+  const p = id ? state.products.find(x=>x.id===id) : null;
+  showModal(`
+    <h3>${p?'Edit item':'Add item'}</h3>
+    <p>Items appear in the class store for every student.</p>
+    <div class="field-row"><label class="field">Name</label><input id="mName" value="${p?p.name:''}"></div>
+    <div class="two-col field-row">
+      <div><label class="field">Price ($)</label><input id="mPrice" type="number" min="0" value="${p?p.price:''}"></div>
+      <div><label class="field">Inventory (blank = unlimited)</label><input id="mInv" type="number" min="0" value="${p&&p.inventory!==null?p.inventory:''}"></div>
+    </div>
+    <div class="actions">
+      ${p?`<button class="btn ghost" onclick="deleteProduct('${p.id}')">Remove</button>`:''}
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveProduct(${p?`'${p.id}'`:'null'})">Save</button>
+    </div>
+  `);
+}
+function saveProduct(id){
+  const name = document.getElementById('mName').value.trim();
+  const price = parseFloat(document.getElementById('mPrice').value);
+  const invRaw = document.getElementById('mInv').value;
+  const inventory = invRaw==='' ? null : Math.max(0, parseInt(invRaw));
+  if(!name || !price || price<=0){ toast('Add a name and a price greater than 0.', true); return; }
+  if(id){
+    const p = state.products.find(x=>x.id===id);
+    p.name=name; p.price=Math.round(price); p.inventory=inventory;
+  }else{
+    state.products.push({id:uid('p'), name, price:Math.round(price), inventory});
+  }
+  saveState(); closeModal(); render(); toast('Saved to the class store.');
+}
+function deleteProduct(id){
+  state.products = state.products.filter(p=>p.id!==id);
+  saveState(); closeModal(); render(); toast('Item removed.');
+}
+
+/* ============================= CLASS PAYMENT ============================= */
+function viewClassPayment(){
+  const selected = view.selected || state.students.filter(s=>s.active).map(s=>s.id);
+  return `
+    <div class="topbar"><div class="titles"><h1>Pay whole class</h1><p>Send the same reward (or fine) to every selected student in one go.</p></div></div>
+    <div class="card">
+      <div class="two-col field-row">
+        <div><label class="field">Description</label><input id="cpDesc" placeholder="e.g. Friday bonus"></div>
+        <div><label class="field">Amount per student ($, use negative for a fine)</label><input id="cpAmount" type="number" step="1" placeholder="25"></div>
+      </div>
+      <div class="field-row">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label class="field" style="margin:0;">Students</label>
+          <div style="display:flex;gap:14px;">
+            <a href="#" onclick="cpSelectAll(true);return false;" style="font-size:12.5px;color:var(--bank-dark);">Select all</a>
+            <a href="#" onclick="cpSelectAll(false);return false;" style="font-size:12.5px;color:var(--ink-soft);">Clear</a>
+          </div>
+        </div>
+        <div class="search-results">
+          ${state.students.filter(s=>s.active).map(s=>`
+            <label class="checkbox-row">
+              <input type="checkbox" value="${s.id}" ${selected.includes(s.id)?'checked':''} onchange="cpToggle('${s.id}',this.checked)">
+              ${s.name} <span style="color:var(--ink-soft);margin-left:auto;">${s.acct}</span>
+            </label>`).join('')}
+        </div>
+      </div>
+      <button class="btn primary lg block" onclick="submitClassPayment()">Pay ${selected.length} student${selected.length===1?'':'s'}</button>
+    </div>
+  `;
+}
+function cpSelectAll(all){ view.selected = all ? state.students.filter(s=>s.active).map(s=>s.id) : []; render(); }
+function cpToggle(id, checked){
+  const sel = new Set(view.selected || state.students.filter(s=>s.active).map(s=>s.id));
+  checked ? sel.add(id) : sel.delete(id);
+  view.selected = [...sel];
+}
+function submitClassPayment(){
+  const desc = document.getElementById('cpDesc').value.trim();
+  const amt = parseFloat(document.getElementById('cpAmount').value);
+  const selected = view.selected || state.students.filter(s=>s.active).map(s=>s.id);
+  if(!desc){ toast('Add a short description.', true); return; }
+  if(!amt){ toast('Enter a nonzero amount.', true); return; }
+  if(!selected.length){ toast('Select at least one student.', true); return; }
+  selected.forEach(id=>addTransaction(id, 'payment', Math.round(amt), desc));
+  saveState();
+  toast(`${desc}: ${fmt$(Math.round(amt))} sent to ${selected.length} student${selected.length===1?'':'s'}.`);
+  setView({name:'dashboard'});
+}
+
+/* ============================= STUDENTS (roster) ============================= */
+function viewStudents(){
+  return `
+    <div class="topbar"><div class="titles"><h1>Manage students</h1><p>Add students, issue cards, or handle a lost card.</p></div>
+      <button class="btn primary" onclick="openStudentModal()">Add student</button>
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Student</th><th>Account</th><th>Card</th><th class="num">Balance</th><th></th></tr></thead><tbody>
+        ${state.students.map(s=>`
+          <tr>
+            <td>${s.name} ${s.active?'':'<span class="badge-inactive" style="margin-left:6px;">Inactive</span>'}</td>
+            <td class="mono">${s.acct}</td>
+            <td>${s.cardActive ? `<span class="badge-active">Active</span>` : `<span class="badge-inactive">Deactivated</span>`}</td>
+            <td class="num mono">${fmt$(balanceOf(s.id))}</td>
+            <td class="num" style="white-space:nowrap;">
+              <button class="btn ghost" onclick="setView({name:'student', studentId:'${s.id}'})">View</button>
+              <button class="btn ghost" onclick="openStudentModal('${s.id}')">Edit</button>
+            </td>
+          </tr>`).join('')}
+      </tbody></table>
+    </div>
+  `;
+}
+function openStudentModal(id){
+  const s = id ? studentById(id) : null;
+  showModal(`
+    <h3>${s?'Edit student':'Add student'}</h3>
+    <p>${s?'Update this student&rsquo;s details, or manage their card below.':'Creates a new account and issues a card automatically.'}</p>
+    <div class="field-row"><label class="field">Name</label><input id="mSName" value="${s?s.name:''}"></div>
+    <div class="field-row"><label class="field">Class / period</label><input id="mSClass" value="${s?s.classPeriod:state.classPeriod}"></div>
+    ${s?`
+      <div class="field-row" style="background:var(--paper);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:2px;">Card</div>
+        <div class="mono" style="font-size:14px;margin-bottom:10px;">${s.cardActive ? s.cardId : 'Deactivated'}</div>
+        <div style="display:flex;gap:8px;">
+          ${s.cardActive ? `<button class="btn ghost" onclick="deactivateCard('${s.id}')">Report lost / deactivate</button>` : `<button class="btn ghost" onclick="reissueCard('${s.id}')">Issue replacement card</button>`}
+          <button class="btn ghost" onclick="toggleActive('${s.id}')">${s.active?'Deactivate account':'Reactivate account'}</button>
+        </div>
+      </div>`:''}
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveStudent(${s?`'${s.id}'`:'null'})">Save</button>
+    </div>
+  `);
+}
+function saveStudent(id){
+  const name = document.getElementById('mSName').value.trim();
+  const cls = document.getElementById('mSClass').value.trim() || state.classPeriod;
+  if(!name){ toast('Enter a name.', true); return; }
+  if(id){
+    const s = studentById(id); s.name=name; s.classPeriod=cls;
+  }else{
+    const s = {id:uid('st'), acct:acctId(state.nextAcct), name, classPeriod:cls, active:true, cardId:cardId(), cardActive:true};
+    state.nextAcct += 1;
+    state.students.push(s);
+  }
+  saveState(); closeModal(); render(); toast('Saved.');
+}
+function deactivateCard(id){
+  const s = studentById(id); s.cardActive=false;
+  saveState(); openStudentModal(id); toast(`Card deactivated for ${s.name}.`);
+}
+function reissueCard(id){
+  const s = studentById(id); s.cardId=cardId(); s.cardActive=true;
+  saveState(); openStudentModal(id); toast(`New card issued for ${s.name}. Same account, same balance.`);
+}
+function toggleActive(id){
+  const s = studentById(id); s.active = !s.active;
+  saveState(); openStudentModal(id); toast(s.active?`${s.name} reactivated.`:`${s.name} deactivated.`);
+}
+
+/* ============================= HISTORY ============================= */
+function viewHistory(){
+  const filter = view.filter || 'all';
+  let rows = [...state.transactions].sort((a,b)=>b.ts-a.ts);
+  if(filter!=='all') rows = rows.filter(t=>t.type===filter);
+  return `
+    <div class="topbar"><div class="titles"><h1>Transaction history</h1><p>Every credit and debit, in order. Nothing is ever deleted &mdash; only reversed.</p></div>
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+    <div class="tabs">
+      ${['all','reward','fine','purchase','payment','reversal'].map(f=>`<div class="tab ${filter===f?'active':''}" onclick="setView({name:'history',filter:'${f}'})">${f==='all'?'All':labelType(f)}</div>`).join('')}
+    </div>
+    <div class="card" style="padding:8px 22px;">
+      ${rows.length ? `<table><thead><tr><th>ID</th><th>Student</th><th>Type</th><th>Description</th><th>When</th><th class="num">Amount</th><th></th></tr></thead><tbody>
+        ${rows.map(t=>{
+          const st = studentById(t.studentId);
+          const reversed = state.transactions.some(x=>x.relatedTransactionId===t.id);
+          const isReversal = t.type==='reversal';
+          return `<tr>
+            <td class="mono" style="color:var(--ink-soft);">${t.id}</td>
+            <td>${st?st.name:'&mdash;'}</td>
+            <td><span class="pill ${t.type}">${labelType(t.type)}</span></td>
+            <td>${t.description}</td>
+            <td style="color:var(--ink-soft);">${fmtDateTime(t.ts)}</td>
+            <td class="num mono ${t.amount>=0?'amt-pos':'amt-neg'}">${fmt$(t.amount)}</td>
+            <td class="num">${(!isReversal && !reversed) ? `<button class="btn ghost" onclick="confirmReverse('${t.id}')">Reverse</button>` : (reversed ? '<span style="font-size:12px;color:var(--ink-soft);">Reversed</span>' : '')}</td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>` : `<div class="empty">No transactions in this view.</div>`}
+    </div>
+  `;
+}
+function confirmReverse(txId){
+  const t = state.transactions.find(x=>x.id===txId);
+  const st = studentById(t.studentId);
+  showModal(`
+    <h3>Reverse this transaction?</h3>
+    <p>${labelType(t.type)} of ${fmt$(t.amount)} for ${st.name} (${t.description}). This creates a new offsetting transaction &mdash; the original stays in the record.</p>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn danger" onclick="doReverse('${txId}')">Reverse transaction</button>
+    </div>
+  `);
+}
+function doReverse(txId){
+  const t = state.transactions.find(x=>x.id===txId);
+  addTransaction(t.studentId, 'reversal', -t.amount, `Reversal of ${t.id}`, t.id);
+  saveState(); closeModal(); render();
+  toast(`Reversed ${t.id}.`);
+}
+function exportCSV(){
+  const header = 'transaction_id,student,type,amount,description,date,created_by\\n';
+  const rows = [...state.transactions].sort((a,b)=>a.ts-b.ts).map(t=>{
+    const st = studentById(t.studentId);
+    return [t.id, st?st.name:'', t.type, t.amount, `"${t.description.replace(/"/g,'""')}"`, new Date(t.ts).toISOString(), t.by].join(',');
+  }).join('\\n');
+  const blob = new Blob([header+rows], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='funny-money-transactions.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV downloaded.');
+}
+
+/* ============================= REPORTS ============================= */
+function viewReports(){
+  const total = state.students.reduce((s,st)=>s+balanceOf(st.id),0);
+  const byType = {};
+  state.transactions.forEach(t=>{ byType[t.type] = (byType[t.type]||0) + Math.abs(t.amount); });
+  const rewardCount = state.transactions.filter(t=>t.type==='reward').length;
+  const fineCount = state.transactions.filter(t=>t.type==='fine').length;
+  const salesByItem = {};
+  state.transactions.filter(t=>t.type==='purchase').forEach(t=>{
+    salesByItem[t.description] = salesByItem[t.description] || {count:0, total:0};
+    salesByItem[t.description].count += 1;
+    salesByItem[t.description].total += Math.abs(t.amount);
+  });
+  const fineReasons = {};
+  state.transactions.filter(t=>t.type==='fine').forEach(t=>{ fineReasons[t.description] = (fineReasons[t.description]||0)+1; });
+
+  return `
+    <div class="topbar"><div class="titles"><h1>Reports</h1><p>A read-only view of how money is moving through the class.</p></div>
+      <button class="btn" onclick="exportCSV()">Export all transactions (CSV)</button>
+    </div>
+
+    <div class="stat-strip" style="margin-bottom:20px;">
+      <div class="stat"><div class="n mono">${fmt$(total)}</div><div class="l">Money supply</div></div>
+      <div class="stat"><div class="n mono">${fmt$(byType.reward||0)}</div><div class="l">Rewards issued</div></div>
+      <div class="stat"><div class="n mono">${fmt$(byType.fine||0)}</div><div class="l">Fines issued</div></div>
+      <div class="stat"><div class="n mono">${fmt$(byType.purchase||0)}</div><div class="l">Store sales</div></div>
+    </div>
+
+    <div class="section-h"><h2>Current balances</h2></div>
+    <div class="card" style="padding:8px 22px;">
+      <table><thead><tr><th>Student</th><th class="num">Balance</th></tr></thead><tbody>
+        ${state.students.map(s=>`<tr><td>${s.name}</td><td class="num mono">${fmt$(balanceOf(s.id))}</td></tr>`).join('')}
+      </tbody></table>
+    </div>
+
+    <div class="two-col" style="margin-top:18px;align-items:start;">
+      <div>
+        <div class="section-h"><h2>Store sales</h2></div>
+        <div class="card" style="padding:8px 22px;">
+          ${Object.keys(salesByItem).length ? `<table><thead><tr><th>Item</th><th class="num">Sold</th><th class="num">Revenue</th></tr></thead><tbody>
+            ${Object.entries(salesByItem).sort((a,b)=>b[1].count-a[1].count).map(([name,d])=>`<tr><td>${name}</td><td class="num">${d.count}</td><td class="num mono">${fmt$(d.total)}</td></tr>`).join('')}
+          </tbody></table>` : `<div class="empty">No purchases yet.</div>`}
+        </div>
+      </div>
+      <div>
+        <div class="section-h"><h2>Fines by reason</h2></div>
+        <div class="card" style="padding:8px 22px;">
+          ${Object.keys(fineReasons).length ? `<table><thead><tr><th>Reason</th><th class="num">Times issued</th></tr></thead><tbody>
+            ${Object.entries(fineReasons).sort((a,b)=>b[1]-a[1]).map(([name,n])=>`<tr><td>${name}</td><td class="num">${n}</td></tr>`).join('')}
+          </tbody></table>` : `<div class="empty">No fines yet.</div>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-h" style="margin-top:18px;"><h2>Summary</h2></div>
+    <div class="card">
+      <table><tbody>
+        <tr><td>Rewards given</td><td class="num mono">${rewardCount}</td></tr>
+        <tr><td>Fines issued</td><td class="num mono">${fineCount}</td></tr>
+        <tr><td>Store purchases</td><td class="num mono">${state.transactions.filter(t=>t.type==='purchase').length}</td></tr>
+        <tr><td>Total transactions</td><td class="num mono">${state.transactions.length}</td></tr>
+      </tbody></table>
+    </div>
+  `;
+}
+
+/* ============================= KIOSK ============================= */
+let kioskLogoutTimer = null;
+function viewKiosk(){
+  const s = view.kioskStudentId ? studentById(view.kioskStudentId) : null;
+  if(!s){
+    return `
+      <div class="kiosk-wrap"><div class="kiosk">
+        <h2 style="margin-top:0;">Student balance kiosk</h2>
+        <p style="color:var(--ink-soft);font-size:14px;">Scan your card to check your balance.</p>
+        <div class="searchbox" style="text-align:left;margin-top:16px;">
+          <input placeholder="Tap your name&hellip;" oninput="onKioskSearch(this.value)">
+          <div id="kioskResults" class="search-results" style="display:none;"></div>
+        </div>
+        ${KIOSK_MODE ? '' : `<button class="btn ghost" style="margin-top:18px;" onclick="setView({name:'dashboard'})">Exit kiosk mode</button>`}
+      </div></div>
+    `;
+  }
+  clearTimeout(kioskLogoutTimer);
+  kioskLogoutTimer = setTimeout(()=>{ setView({name:'kiosk'}); }, 10000);
+  const hist = txForStudent(s.id).slice(0,5);
+  return `
+    <div class="kiosk-wrap"><div class="kiosk">
+      <h2 style="margin-top:0;">Welcome, ${s.name.split(' ')[0]}!</h2>
+      <div class="num mono" style="font-size:44px;color:var(--bank-dark);margin:6px 0;">${fmt$(balanceOf(s.id))}</div>
+      <div style="color:var(--ink-soft);font-size:12.5px;margin-bottom:18px;">Recent activity</div>
+      <div style="text-align:left;">
+        ${hist.map(t=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #EEF1E7;font-size:13.5px;">
+          <span>${t.description}</span><span class="mono ${t.amount>=0?'amt-pos':'amt-neg'}">${fmt$(t.amount)}</span>
+        </div>`).join('') || '<div class="empty">No activity yet.</div>'}
+      </div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:16px;">This screen logs out automatically.</div>
+      <button class="btn ghost" style="margin-top:10px;" onclick="setView({name:'kiosk'})">Done</button>
+    </div></div>
+  `;
+}
+function onKioskSearch(v){
+  const box = document.getElementById('kioskResults');
+  if(!v.trim()){ box.style.display='none'; return; }
+  const matches = state.students.filter(s=>s.active && s.name.toLowerCase().includes(v.toLowerCase()));
+  box.style.display='block';
+  box.innerHTML = matches.length ? matches.map(s=>`<div class="search-row" onclick="setView({name:'kiosk', kioskStudentId:'${s.id}'})"><div class="name">${s.name}</div></div>`).join('') : `<div class="empty" style="padding:14px;">No matches.</div>`;
+}
+
+/* ============================= MODAL ============================= */
+function showModal(html){
+  closeModal();
+  const bg = document.createElement('div');
+  bg.className='modal-bg'; bg.id='modalBg';
+  bg.onclick = (e)=>{ if(e.target.id==='modalBg') closeModal(); };
+  bg.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m = document.getElementById('modalBg'); if(m) m.remove(); }
+
+function bindGlobalHandlers(){}
+
+/* ============================= BOOT ============================= */
+document.getElementById('root').innerHTML = `<div class="kiosk-wrap"><div class="kiosk"><h2 style="margin-top:0;">Connecting to the class bank&hellip;</h2><p style="color:var(--ink-soft);font-size:14px;">If this hangs, double-check the Firestore setup.</p></div></div>`;
+
+onSnapshot(stateDocRef, async (snap) => {
+  if(snap.exists()){
+    state = JSON.parse(snap.data().json);
+    render();
+  } else {
+    state = seedState();
+    await saveState(); // first client to connect seeds the shared bank; the write triggers this listener again
+  }
+}, (err) => {
+  console.error(err);
+  document.getElementById('root').innerHTML = `<div class="kiosk-wrap"><div class="kiosk"><h2 style="margin-top:0;">Couldn\u2019t connect</h2><p style="color:var(--ink-soft);font-size:14px;">${err.message || 'Check your Firestore rules and internet connection.'}</p></div></div>`;
+});
+
+/* Expose handlers referenced by inline onclick/onchange/oninput attributes,
+   since ES module scripts don't put top-level functions on window automatically. */
+Object.assign(window, {
+  setView, selectStudent, onSearchInput, pickPreset, onRaSearch, pickRaStudent,
+  submitRewardFine, buyItem, openProductModal, saveProduct, deleteProduct,
+  cpSelectAll, cpToggle, submitClassPayment, openStudentModal, saveStudent,
+  deactivateCard, reissueCard, toggleActive, confirmReverse, doReverse,
+  exportCSV, onKioskSearch, closeModal, tryUnlock, lockApp, openPinModal, savePin,
+});
+</script>
+</body>
+</html>
