@@ -375,7 +375,8 @@ function render(){
       </div>
       ${navBtn('dashboard','home','Dashboard')}
       ${navBtn('select','scan','Scan / find student')}
-      ${navBtn('storeManage','store','Class store')}
+      ${navBtn('storeManage','store','Fines/Debits')}
+      ${navBtn('reward','reward','Credits')}
       ${navBtn('classPayment','payment','Pay whole class')}
       ${navBtn('students','students','Manage students')}
       ${navBtn('history','history','Transaction history')}
@@ -516,7 +517,7 @@ function viewDashboard(){
     <div class="grid-actions">
       ${actionTile('select','reward','Give a reward','Boost a student balance')}
       ${actionTile('select-fine','fine','Issue a fine','Deduct for a rule or fee')}
-      ${actionTile('storeManage','store','Class store','Manage items & prices')}
+      ${actionTile('storeManage','store','Fines/Debits','Manage items & prices')}
       ${actionTile('classPayment','payment','Pay whole class','One reward, everyone at once')}
       ${actionTile('students','students','Manage students','Add students, issue cards')}
       ${actionTile('history','history','Transaction history','Every credit and debit')}
@@ -764,7 +765,7 @@ function viewStorePurchase(studentId){
   return `
     <div class="topbar"><div class="titles">
       <button class="btn ghost" onclick="setView({name:'${s?'student':'select'}'${s?`, studentId:'${s.id}'`:''}})" style="margin-bottom:8px;padding-left:4px;">${ICONS.back} Back</button>
-      <h1>Class store</h1>
+      <h1>Fines/Debits</h1>
       <p>${s ? `Shopping for ${s.name} &middot; balance ${fmt$(bal)}` : 'Select a student to start checkout.'}</p>
     </div></div>
     ${!s ? `<div class="card"><div class="empty">Scan or search for a student first, then come back to the store.<br><button class="btn primary" style="margin-top:12px;" onclick="setView({name:'select'})">Find a student</button></div></div>` : `
@@ -801,7 +802,7 @@ function buyItem(studentId, productId){
 /* ============================= STORE MANAGE ============================= */
 function viewStoreManage(){
   return `
-    <div class="topbar"><div class="titles"><h1>Class store</h1><p>Set prices and track inventory for classroom items.</p></div>
+    <div class="topbar"><div class="titles"><h1>Fines/Debits</h1><p>Set prices and track inventory for classroom items.</p></div>
       <button class="btn primary" onclick="openProductModal()">Add item</button>
     </div>
     <div class="card">
@@ -824,7 +825,7 @@ function openProductModal(id){
   const p = id ? state.products.find(x=>x.id===id) : null;
   showModal(`
     <h3>${p?'Edit item':'Add item'}</h3>
-    <p>Items appear in the class store for every student.</p>
+    <p>Items appear in Fines/Debits for every student.</p>
     <div class="field-row"><label class="field">Name</label><input id="mName" value="${p?p.name:''}"></div>
     <div class="two-col field-row">
       <div><label class="field">Price ($)</label><input id="mPrice" type="number" min="0" value="${p?p.price:''}"></div>
@@ -849,7 +850,7 @@ function saveProduct(id){
   }else{
     state.products.push({id:uid('p'), name, price:Math.round(price), inventory});
   }
-  saveState(); closeModal(); render(); toast('Saved to the class store.');
+  saveState(); closeModal(); render(); toast('Saved to Fines/Debits.');
 }
 function deleteProduct(id){
   state.products = state.products.filter(p=>p.id!==id);
