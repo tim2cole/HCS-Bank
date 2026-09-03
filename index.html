@@ -943,6 +943,9 @@ function openStudentModal(id){
           ${s.cardActive ? `<button class="btn ghost" onclick="deactivateCard('${s.id}')">Report lost / deactivate</button>` : `<button class="btn ghost" onclick="reissueCard('${s.id}')">Issue replacement card</button>`}
           <button class="btn ghost" onclick="toggleActive('${s.id}')">${s.active?'Deactivate account':'Reactivate account'}</button>
         </div>
+      </div>
+      <div style="text-align:right;margin-top:10px;">
+        <a href="#" onclick="confirmDeleteStudent('${s.id}');return false;" style="font-size:12.5px;color:var(--red);">Delete permanently</a>
       </div>`:''}
     <div class="actions">
       <button class="btn ghost" onclick="closeModal()">Cancel</button>
@@ -974,6 +977,26 @@ function reissueCard(id){
 function toggleActive(id){
   const s = studentById(id); s.active = !s.active;
   saveState(); openStudentModal(id); toast(s.active?`${s.name} reactivated.`:`${s.name} deactivated.`);
+}
+function confirmDeleteStudent(id){
+  const s = studentById(id);
+  const txCount = txForStudent(id).length;
+  showModal(`
+    <h3>Delete ${s.name} permanently?</h3>
+    <p>This removes the account, card, and all ${txCount} transaction record${txCount===1?'':'s'} for good. There's no audit trail left behind and this can't be undone. If you might need the history later, use Deactivate instead.</p>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn danger" onclick="doDeleteStudent('${id}')">Delete permanently</button>
+    </div>
+  `);
+}
+function doDeleteStudent(id){
+  const s = studentById(id);
+  const name = s.name;
+  state.students = state.students.filter(x=>x.id!==id);
+  state.transactions = state.transactions.filter(t=>t.studentId!==id);
+  saveState(); closeModal(); setView({name:'students'});
+  toast(`${name} deleted permanently.`);
 }
 
 /* ============================= HISTORY ============================= */
@@ -1185,7 +1208,7 @@ Object.assign(window, {
   cpSelectAll, cpToggle, submitClassPayment, openStudentModal, saveStudent,
   deactivateCard, reissueCard, toggleActive, confirmReverse, doReverse,
   exportCSV, onKioskSearch, closeModal, tryUnlock, lockApp, openPinModal, savePin,
-  openProfileModal, saveProfile,
+  openProfileModal, saveProfile, confirmDeleteStudent, doDeleteStudent,
 });
 </script>
 </body>
