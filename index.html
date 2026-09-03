@@ -908,8 +908,11 @@ function submitClassPayment(){
 /* ============================= STUDENTS (roster) ============================= */
 function viewStudents(){
   return `
-    <div class="topbar"><div class="titles"><h1>Manage students</h1><p>Add students, issue cards, or handle a lost card.</p></div>
-      <button class="btn primary" onclick="openStudentModal()">Add student</button>
+    <div class="topbar"><div class="titles"><h1>Manage students</h1><p>Add students, import a roster, issue cards, or handle a lost card.</p></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="openImportStudentsModal()">Import students</button>
+        <button class="btn primary" onclick="openStudentModal()">Add student</button>
+      </div>
     </div>
     <div class="card">
       <table><thead><tr><th>Student</th><th>Account</th><th>Card</th><th class="num">Balance</th><th></th></tr></thead><tbody>
@@ -953,6 +956,87 @@ function openStudentModal(id){
     </div>
   `);
 }
+function openImportStudentsModal(){
+  showModal(`
+    <h3>Import students</h3>
+    <p>Paste one student per line, or use two columns: <strong>Name, Class / period</strong>. You can also choose a CSV or text file.</p>
+    <div class="field-row">
+      <label class="field">Roster file (optional)</label>
+      <input id="studentImportFile" type="file" accept=".csv,.txt,text/csv,text/plain" onchange="loadStudentImportFile(this)">
+    </div>
+    <div class="field-row">
+      <label class="field">Students</label>
+      <textarea id="studentImportText" rows="10" placeholder="Jordan M.
+Ava R.
+Deshawn T.
+
+or:
+Jordan M.,Period 3
+Ava R.,Period 3"></textarea>
+    </div>
+    <div style="font-size:12px;color:var(--ink-soft);margin:-4px 0 16px;">A header such as <span class="mono">name,class</span> is okay. Existing students with the same name and class are skipped.</div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="importStudents()">Import</button>
+    </div>
+  `);
+}
+
+function loadStudentImportFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ document.getElementById('studentImportText').value = String(reader.result || ''); };
+  reader.onerror = ()=>toast('Could not read that file.', true);
+  reader.readAsText(file);
+}
+
+function parseStudentImport(text){
+  const lines = text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const rows = [];
+  for(let i=0;i<lines.length;i++){
+    let line = lines[i];
+    let parts;
+    if(line.includes('\t')) parts = line.split('\t');
+    else {
+      // Basic CSV parsing, including quoted names such as "Smith, Jordan".
+      const matches = [...line.matchAll(/(?:^|,)\s*(?:"((?:[^"]|"")*)"|([^,]*))/g)];
+      parts = matches.map(m=>(m[1]!==undefined ? m[1].replace(/""/g,'"') : m[2]).trim());
+    }
+    parts = parts.filter((p,idx)=>idx<2 || p.trim()!=='');
+    const name = (parts[0] || '').trim();
+    const cls = (parts[1] || state.classPeriod).trim() || state.classPeriod;
+    if(!name) continue;
+    if(i===0 && /^(student\s*)?name$/i.test(name) && (!parts[1] || /class|period/i.test(parts[1]))) continue;
+    rows.push({name, classPeriod:cls});
+  }
+  return rows;
+}
+
+function importStudents(){
+  const raw = document.getElementById('studentImportText').value;
+  const rows = parseStudentImport(raw);
+  if(!rows.length){ toast('Paste or choose a student list first.', true); return; }
+
+  const existing = new Set(state.students.map(s=>`${s.name.trim().toLowerCase()}|${s.classPeriod.trim().toLowerCase()}`));
+  let added = 0, skipped = 0;
+  for(const row of rows){
+    const key = `${row.name.toLowerCase()}|${row.classPeriod.toLowerCase()}`;
+    if(existing.has(key)){ skipped++; continue; }
+    state.students.push({
+      id:uid('st'), acct:acctId(state.nextAcct), name:row.name, classPeriod:row.classPeriod,
+      active:true, cardId:cardId(), cardActive:true
+    });
+    state.nextAcct += 1;
+    existing.add(key);
+    added++;
+  }
+
+  if(!added){ toast(`No students imported — ${skipped} duplicate${skipped===1?' was':'s were'} skipped.`, true); return; }
+  saveState(); closeModal(); render();
+  toast(`Imported ${added} student${added===1?'':'s'}${skipped ? `; skipped ${skipped} duplicate${skipped===1?'':'s'}` : ''}.`);
+}
+
 function saveStudent(id){
   const name = document.getElementById('mSName').value.trim();
   const cls = document.getElementById('mSClass').value.trim() || state.classPeriod;
@@ -1206,6 +1290,7 @@ Object.assign(window, {
   setView, selectStudent, onSearchInput, pickPreset, onRaSearch, pickRaStudent,
   submitRewardFine, buyItem, openProductModal, saveProduct, deleteProduct,
   cpSelectAll, cpToggle, submitClassPayment, openStudentModal, saveStudent,
+  openImportStudentsModal, loadStudentImportFile, importStudents,
   deactivateCard, reissueCard, toggleActive, confirmReverse, doReverse,
   exportCSV, onKioskSearch, closeModal, tryUnlock, lockApp, openPinModal, savePin,
   openProfileModal, saveProfile, confirmDeleteStudent, doDeleteStudent,
