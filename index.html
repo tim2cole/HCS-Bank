@@ -376,7 +376,7 @@ function render(){
       ${navBtn('dashboard','home','Dashboard')}
       ${navBtn('select','scan','Scan / find student')}
       ${navBtn('storeManage','store','Fines/Debits')}
-      ${navBtn('reward','reward','Credits')}
+      ${navBtn('creditsManage','reward','Credits')}
       ${navBtn('classPayment','payment','Pay whole class')}
       ${navBtn('students','students','Manage students')}
       ${navBtn('history','history','Transaction history')}
@@ -477,6 +477,7 @@ function renderView(){
     case 'select': return viewSelect();
     case 'student': return viewStudent(view.studentId);
     case 'reward': return viewRewardOrFine('reward');
+    case 'creditsManage': return viewCreditsManage();
     case 'fine': return viewRewardOrFine('fine');
     case 'store': return viewStorePurchase(view.studentId);
     case 'storeManage': return viewStoreManage();
@@ -664,11 +665,71 @@ function cardFace(s){
   </div>`;
 }
 
+/* ============================= CREDITS MANAGE ============================= */
+function viewCreditsManage(){
+  const presets = state.rewardPresets || (state.rewardPresets = []);
+  return `
+    <div class="topbar"><div class="titles"><h1>Credits</h1><p>Create the credit amounts you use to award students Funny Money.</p></div>
+      <button class="btn primary" onclick="openCreditModal()">Add credit</button>
+    </div>
+    <div class="card">
+      ${presets.length ? `<table><thead><tr><th>Credit</th><th class="num">Amount</th><th class="num">Times awarded</th><th></th></tr></thead><tbody>
+        ${presets.map((p,i)=>{
+          const count = state.transactions.filter(t=>t.type==='reward' && t.description===p.name).length;
+          return `<tr>
+            <td>${p.name}</td>
+            <td class="num mono">+$${p.amount}</td>
+            <td class="num mono">${count}</td>
+            <td class="num" style="white-space:nowrap;">
+              <button class="btn primary" onclick="awardCredit(${i})">Award</button>
+              <button class="btn ghost" onclick="openCreditModal(${i})">Edit</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>` : `<div class="empty">No credits yet. Add one to get started.</div>`}
+    </div>
+  `;
+}
+function openCreditModal(index){
+  const p = Number.isInteger(index) ? state.rewardPresets[index] : null;
+  showModal(`
+    <h3>${p?'Edit credit':'Add credit'}</h3>
+    <p>Credits appear as award choices when you give a student money.</p>
+    <div class="field-row"><label class="field">Name</label><input id="mCreditName" value="${p?p.name:''}" placeholder="e.g. Great participation"></div>
+    <div class="field-row"><label class="field">Amount ($)</label><input id="mCreditAmount" type="number" min="1" step="1" value="${p?p.amount:''}" placeholder="10"></div>
+    <div class="actions">
+      ${p?`<button class="btn ghost" onclick="deleteCredit(${index})">Remove</button>`:''}
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveCredit(${Number.isInteger(index)?index:'null'})">Save</button>
+    </div>
+  `);
+}
+function saveCredit(index){
+  const name = document.getElementById('mCreditName').value.trim();
+  const amount = parseFloat(document.getElementById('mCreditAmount').value);
+  if(!name || !amount || amount<=0){ toast('Add a name and an amount greater than 0.', true); return; }
+  const item = {name, amount:Math.round(amount)};
+  if(Number.isInteger(index)) state.rewardPresets[index] = item;
+  else state.rewardPresets.push(item);
+  saveState(); closeModal(); render(); toast('Credit saved.');
+}
+function deleteCredit(index){
+  if(!Number.isInteger(index) || !state.rewardPresets[index]) return;
+  state.rewardPresets.splice(index,1);
+  saveState(); closeModal(); render(); toast('Credit removed.');
+}
+function awardCredit(index){
+  if(!state.rewardPresets[index]) return;
+  setView({name:'reward', presetIndex:index});
+}
+
 /* ============================= REWARD / FINE ============================= */
 function viewRewardOrFine(kind){
   const isReward = kind==='reward';
   const s = view.studentId ? studentById(view.studentId) : null;
   const presets = isReward ? state.rewardPresets : state.finePresets;
+  const presetIndex = Number.isInteger(view.presetIndex) ? view.presetIndex : null;
+  const preset = presetIndex!==null && presets[presetIndex] ? presets[presetIndex] : null;
   return `
     <div class="topbar"><div class="titles">
       <button class="btn ghost" onclick="setView({name:'${s?'student':'select'}'${s?`, studentId:'${s.id}'`:''}})" style="margin-bottom:8px;padding-left:4px;">${ICONS.back} Back</button>
@@ -688,7 +749,7 @@ function viewRewardOrFine(kind){
       <div class="field-row">
         <label class="field">${isReward?'Reward':'Fine / fee'} preset</label>
         <div class="preset-grid" id="presetGrid">
-          ${presets.map((p,i)=>`<div class="preset ${kind}" data-idx="${i}" onclick="pickPreset(${i},'${kind}')">
+          ${presets.map((p,i)=>`<div class="preset ${kind} ${presetIndex===i?'selected':''}" data-idx="${i}" onclick="pickPreset(${i},'${kind}')">
             <div class="pt">${p.name}</div><div class="pa mono">${isReward?'+':'-'}$${p.amount}</div>
           </div>`).join('')}
           <div class="preset ${kind}" data-idx="custom" onclick="pickPreset('custom','${kind}')">
@@ -700,11 +761,11 @@ function viewRewardOrFine(kind){
       <div class="two-col field-row">
         <div>
           <label class="field">Description</label>
-          <input id="raDesc" placeholder="e.g. ${isReward?'Great teamwork today':'Talking during quiet work'}">
+          <input id="raDesc" value="${preset?preset.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}" placeholder="e.g. ${isReward?'Great teamwork today':'Talking during quiet work'}">
         </div>
         <div>
           <label class="field">Amount ($)</label>
-          <input id="raAmount" type="number" min="0" step="1" placeholder="0">
+          <input id="raAmount" type="number" min="0" step="1" value="${preset?preset.amount:''}" placeholder="0">
         </div>
       </div>
 
@@ -1289,6 +1350,7 @@ onSnapshot(stateDocRef, async (snap) => {
    since ES module scripts don't put top-level functions on window automatically. */
 Object.assign(window, {
   setView, selectStudent, onSearchInput, pickPreset, onRaSearch, pickRaStudent,
+  openCreditModal, saveCredit, deleteCredit, awardCredit,
   submitRewardFine, buyItem, openProductModal, saveProduct, deleteProduct,
   cpSelectAll, cpToggle, submitClassPayment, openStudentModal, saveStudent,
   openImportStudentsModal, loadStudentImportFile, importStudents,
