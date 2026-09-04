@@ -139,12 +139,12 @@
   .fm-card::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);}
   .fm-card .bank-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;letter-spacing:.2px;}
   .fm-card .chip{width:34px;height:26px;border-radius:5px;background:linear-gradient(135deg,#D9A441,#F3D890);}
-  .fm-card .qr-mount{background:#fff;border-radius:5px;padding:3px;}
+  .fm-card .qr{background:#fff;border-radius:5px;padding:3px;}
   .fm-card .holder{font-size:15px;font-weight:600;}
   .fm-card .acct{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#B9C4D6;margin-top:2px;letter-spacing:.5px;}
   .fm-card.inactive{filter:grayscale(1);opacity:.55;}
   .fm-card .card-fine-print{font-size:9.5px;color:#93A2B8;margin-top:4px;letter-spacing:.2px;}
-  .qr-mount{background:#fff;border-radius:5px;padding:3px;display:flex;align-items:center;justify-content:center;line-height:0;}
+  .qr{background:#fff;border-radius:5px;padding:3px;display:flex;align-items:center;justify-content:center;line-height:0;}
 
   .print-sheet{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:6px;}
   .print-card{width:100%;max-width:336px;aspect-ratio:1.586/1;}
@@ -218,7 +218,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.0.3/qrcode.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -239,23 +239,20 @@ const ICONS = {
   back: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M14 18 7 11l7-7"/></svg>`,
 };
 function qrMount(text, size){
-  // Placeholder div; actual QR pixels are drawn by mountQRCodes() after the
-  // HTML is in the DOM, since the QRCode library needs a real element to render into.
-  return `<div class="qr qr-mount" data-qr-text="${text}" data-qr-size="${size||44}"></div>`;
-}
-function mountQRCodes(){
-  document.querySelectorAll('.qr-mount:not([data-mounted])').forEach(el=>{
-    const text = el.dataset.qrText;
-    const size = parseInt(el.dataset.qrSize) || 44;
-    try{
-      new QRCode(el, {
-        text, width:size, height:size,
-        colorDark:'#111111', colorLight:'#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-      el.dataset.mounted = '1';
-    }catch(e){ console.error('QR render failed', e); }
-  });
+  // Renders a real vector <svg> QR code synchronously (no canvas, no DOM-mount
+  // step, no print-resolution blur \u2014 it scales crisply to any print size).
+  size = size || 44;
+  try{
+    const qr = qrcode(0, 'M'); // typeNumber 0 = auto-detect smallest size, 'M' = medium error correction
+    qr.addData(String(text));
+    qr.make();
+    let svg = qr.createSvgTag(4, 4);
+    svg = svg.replace('<svg ', '<svg style="width:100%;height:100%;display:block;" ');
+    return `<div class="qr" style="width:${size}px;height:${size}px;">${svg}</div>`;
+  }catch(e){
+    console.error('QR render failed', e);
+    return `<div class="qr" style="width:${size}px;height:${size}px;background:#fff;"></div>`;
+  }
 }
 
 /* ============================= FIREBASE ============================= */
@@ -418,7 +415,6 @@ function render(){
   `;
   document.getElementById('main').innerHTML = renderView();
   bindGlobalHandlers();
-  mountQRCodes();
 }
 function renderLockScreen(){
   document.getElementById('root').innerHTML = `
