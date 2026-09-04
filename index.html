@@ -139,11 +139,24 @@
   .fm-card::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);}
   .fm-card .bank-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;letter-spacing:.2px;}
   .fm-card .chip{width:34px;height:26px;border-radius:5px;background:linear-gradient(135deg,#D9A441,#F3D890);}
-  .fm-card .qr{width:44px;height:44px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;}
-  .fm-card .qr img,.fm-card .qr svg{width:36px;height:36px;}
+  .fm-card .qr-mount{background:#fff;border-radius:5px;padding:3px;}
   .fm-card .holder{font-size:15px;font-weight:600;}
   .fm-card .acct{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#B9C4D6;margin-top:2px;letter-spacing:.5px;}
   .fm-card.inactive{filter:grayscale(1);opacity:.55;}
+  .fm-card .card-fine-print{font-size:9.5px;color:#93A2B8;margin-top:4px;letter-spacing:.2px;}
+  .qr-mount{background:#fff;border-radius:5px;padding:3px;display:flex;align-items:center;justify-content:center;line-height:0;}
+
+  .print-sheet{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:6px;}
+  .print-card{width:100%;max-width:336px;aspect-ratio:1.586/1;}
+  @media (max-width:760px){.print-sheet{grid-template-columns:1fr;}}
+  @media print{
+    body{background:#fff;}
+    .rail, .no-print{display:none !important;}
+    .main{padding:0;max-width:none;margin:0;}
+    .print-sheet{grid-template-columns:repeat(2,1fr);gap:16px;}
+    .print-card{box-shadow:none;border:1px dashed #999;break-inside:avoid;page-break-inside:avoid;}
+    .fm-card::after{display:none;}
+  }
   .fm-card .row{display:flex;justify-content:space-between;align-items:flex-start;}
 
   .balance-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
@@ -205,6 +218,7 @@
 </head>
 <body>
 <div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -221,19 +235,27 @@ const ICONS = {
   history: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>`,
   reports: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>`,
   kiosk: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="12" rx="1.5"/><path d="M9 20h6M12 15v5"/></svg>`,
+  print: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg>`,
   back: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M14 18 7 11l7-7"/></svg>`,
 };
-function qr(seed){
-  // deterministic pseudo-qr pattern purely decorative, generated from the card id
-  let h = 0; for(let i=0;i<seed.length;i++) h = (h*31 + seed.charCodeAt(i)) >>> 0;
-  let rnd = ()=>{ h = (h*1103515245+12345) >>> 0; return (h>>>16) % 2; };
-  let cells='';
-  for(let y=0;y<7;y++) for(let x=0;x<7;x++){
-    if((x<2&&y<2)||(x>4&&y<2)||(x<2&&y>4)) continue; // leave corners for finder marks
-    if(rnd()) cells += `<rect x="${x*5}" y="${y*5}" width="4.4" height="4.4"/>`;
-  }
-  const finder = (fx,fy)=>`<rect x="${fx}" y="${fy}" width="9" height="9" fill="none" stroke="#111" stroke-width="2"/><rect x="${fx+3}" y="${fy+3}" width="3" height="3"/>`;
-  return `<svg viewBox="0 0 35 35" xmlns="http://www.w3.org/2000/svg" fill="#111">${cells}${finder(0,0)}${finder(26,0)}${finder(0,26)}</svg>`;
+function qrMount(text, size){
+  // Placeholder div; actual QR pixels are drawn by mountQRCodes() after the
+  // HTML is in the DOM, since the QRCode library needs a real element to render into.
+  return `<div class="qr qr-mount" data-qr-text="${text}" data-qr-size="${size||44}"></div>`;
+}
+function mountQRCodes(){
+  document.querySelectorAll('.qr-mount:not([data-mounted])').forEach(el=>{
+    const text = el.dataset.qrText;
+    const size = parseInt(el.dataset.qrSize) || 44;
+    try{
+      new QRCode(el, {
+        text, width:size, height:size,
+        colorDark:'#111111', colorLight:'#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      el.dataset.mounted = '1';
+    }catch(e){ console.error('QR render failed', e); }
+  });
 }
 
 /* ============================= FIREBASE ============================= */
@@ -382,6 +404,7 @@ function render(){
       ${navBtn('history','history','Transaction history')}
       ${navBtn('reports','reports','Reports')}
       ${navBtn('kiosk','kiosk','Student kiosk')}
+      ${navBtn('printCards','print','Print cards')}
       <div class="spacer"></div>
       <div class="foot">
         <span style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" onclick="openProfileModal()" title="Click to edit">Signed in as ${state.teacherName}</span><br>Closed-loop classroom currency &mdash; no real money.
@@ -395,6 +418,7 @@ function render(){
   `;
   document.getElementById('main').innerHTML = renderView();
   bindGlobalHandlers();
+  mountQRCodes();
 }
 function renderLockScreen(){
   document.getElementById('root').innerHTML = `
@@ -486,6 +510,7 @@ function renderView(){
     case 'history': return viewHistory();
     case 'reports': return viewReports();
     case 'kiosk': return viewKiosk();
+    case 'printCards': return viewPrintCards();
     default: return viewDashboard();
   }
 }
@@ -660,7 +685,40 @@ function cardFace(s){
         <div class="holder">${s.name}</div>
         <div class="acct">${s.acct} &nbsp;&middot;&nbsp; ${s.cardActive ? s.cardId : 'Card deactivated'}</div>
       </div>
-      <div class="qr">${qr(s.cardId)}</div>
+      ${qrMount(s.cardId, 44)}
+    </div>
+  </div>`;
+}
+
+/* ============================= PRINT CARDS ============================= */
+function viewPrintCards(){
+  const printable = state.students.filter(s=>s.active && s.cardActive);
+  const skipped = state.students.filter(s=>s.active && !s.cardActive);
+  return `
+    <div class="topbar no-print"><div class="titles">
+      <h1>Print cards</h1>
+      <p>Each card's QR code contains only its card ID &mdash; no name, balance, or account number. Cut along the dashed lines.</p>
+    </div>
+      <button class="btn primary" onclick="window.print()">${ICONS.print} &nbsp;Print this page</button>
+    </div>
+    ${skipped.length ? `<div class="card no-print" style="margin-bottom:16px;"><div style="font-size:13.5px;color:var(--ink-soft);">${skipped.map(s=>s.name).join(', ')} ${skipped.length===1?'has':'have'} a deactivated card and ${skipped.length===1?'is':'are'} skipped here. Issue a replacement from Manage students first.</div></div>` : ''}
+    ${printable.length ? `<div class="print-sheet">${printable.map(s=>printCardFace(s)).join('')}</div>`
+      : `<div class="card"><div class="empty">No active students with active cards yet. Add students from Manage students first.</div></div>`}
+  `;
+}
+function printCardFace(s){
+  return `<div class="fm-card print-card">
+    <div class="row">
+      <div class="bank-name">Funny Money Bank</div>
+      <div class="chip"></div>
+    </div>
+    <div class="row" style="align-items:flex-end;">
+      <div>
+        <div class="holder">${s.name}</div>
+        <div class="acct">${s.acct}</div>
+        <div class="card-fine-print">No real value &middot; classroom use only</div>
+      </div>
+      ${qrMount(s.cardId, 60)}
     </div>
   </div>`;
 }
