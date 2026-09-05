@@ -243,11 +243,28 @@ function qrMount(text, size){
   // step, no print-resolution blur \u2014 it scales crisply to any print size).
   size = size || 44;
   try{
-    const qr = qrcode(0, 'M'); // typeNumber 0 = auto-detect smallest size, 'M' = medium error correction
-    qr.addData(String(text));
-    qr.make();
-    let svg = qr.createSvgTag(4, 4);
-    svg = svg.replace('<svg ', '<svg style="width:100%;height:100%;display:block;" ');
+    const data = String(text);
+    let qr, made = false;
+    // The hosted build of this library doesn't support typeNumber 0
+    // (auto-detect grid size) \u2014 it throws. So we find the smallest working
+    // grid size ourselves by trying increasing sizes until one fits the data.
+    for(let t=1; t<=10 && !made; t++){
+      try{
+        qr = qrcode(t, 'M');
+        qr.addData(data);
+        qr.make();
+        made = true;
+      }catch(e){ /* too small for this data, try the next size up */ }
+    }
+    if(!made) throw new Error('QR data too long to encode');
+    const cellSize = 4, margin = 4;
+    const native = qr.getModuleCount() * cellSize + margin * 2; // matches the library's own internal math
+    let svg = qr.createSvgTag(cellSize, margin);
+    // Some hosted builds of this library also omit a viewBox, so forcing a
+    // smaller CSS size just crops the drawing instead of scaling it. Injecting
+    // our own viewBox (using the same math the library used internally) fixes
+    // that regardless of which exact build ends up loaded.
+    svg = svg.replace('<svg ', `<svg viewBox="0 0 ${native} ${native}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;" `);
     return `<div class="qr" style="width:${size}px;height:${size}px;">${svg}</div>`;
   }catch(e){
     console.error('QR render failed', e);
@@ -276,7 +293,16 @@ let view = {name:'dashboard'};
 let toastTimer = null;
 const urlParams = new URLSearchParams(location.search);
 const KIOSK_MODE = urlParams.get('kiosk') === '1'; // bookmark ?kiosk=1 on the classroom kiosk device
+const SCANNED_CARD = urlParams.get('card') || null; // set when a printed card's QR link is opened
+let initialCardRouted = false; // only auto-jump to the scanned card once, not on every data sync
 let unlocked = false; // resets on page reload/close \u2014 in-memory only, no browser storage used
+
+function buildCardUrl(cardId){
+  return `${location.origin}${location.pathname}?card=${encodeURIComponent(cardId)}`;
+}
+function findStudentByCard(cardId){
+  return state.students.find(s => s.cardId === cardId && s.cardActive) || null;
+}
 
 function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,8).toUpperCase(); }
 function cardId(){ const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s='FMC-'; for(let i=0;i<8;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
@@ -435,7 +461,16 @@ function renderLockScreen(){
 function tryUnlock(){
   const val = document.getElementById('pinInput').value;
   const correct = (state.settings && state.settings.teacherPin) || '1234';
-  if(val === correct){ unlocked = true; render(); }
+  if(val === correct){
+    unlocked = true;
+    if(SCANNED_CARD && !initialCardRouted){
+      initialCardRouted = true;
+      const matched = findStudentByCard(SCANNED_CARD);
+      if(matched) view = {name:'student', studentId: matched.id};
+      else toast("That card wasn't recognized \u2014 showing search instead.", true);
+    }
+    render();
+  }
   else{
     toast('Incorrect PIN.', true);
     const inp = document.getElementById('pinInput'); inp.value=''; inp.focus();
@@ -681,7 +716,7 @@ function cardFace(s){
         <div class="holder">${s.name}</div>
         <div class="acct">${s.acct} &nbsp;&middot;&nbsp; ${s.cardActive ? s.cardId : 'Card deactivated'}</div>
       </div>
-      ${qrMount(s.cardId, 44)}
+      ${qrMount(buildCardUrl(s.cardId), 44)}
     </div>
   </div>`;
 }
@@ -714,7 +749,7 @@ function printCardFace(s){
         <div class="acct">${s.acct}</div>
         <div class="card-fine-print">No real value &middot; classroom use only</div>
       </div>
-      ${qrMount(s.cardId, 60)}
+      ${qrMount(buildCardUrl(s.cardId), 60)}
     </div>
   </div>`;
 }
@@ -1390,6 +1425,13 @@ document.getElementById('root').innerHTML = `<div class="kiosk-wrap"><div class=
 onSnapshot(stateDocRef, async (snap) => {
   if(snap.exists()){
     state = JSON.parse(snap.data().json);
+    if(KIOSK_MODE && !initialCardRouted){
+      initialCardRouted = true;
+      if(SCANNED_CARD){
+        const matched = findStudentByCard(SCANNED_CARD);
+        view = matched ? {name:'kiosk', kioskStudentId: matched.id} : {name:'kiosk'};
+      }
+    }
     render();
   } else {
     state = seedState();
